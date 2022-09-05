@@ -28,6 +28,9 @@ defmodule Nostr.Relay.MixProject do
   end
 
   defp deps do
-    []
+    [
+      {:bandit, github: "mtrudel/bandit", branch: "0.5"},
+      {:jason, "~> 1.3"}
+    ]
   end
 end

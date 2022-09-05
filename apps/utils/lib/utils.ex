@@ -1,18 +1,7 @@
 defmodule Nostr.Utils do
-  @moduledoc """
-  Documentation for `Utils`.
-  """
+  @moduledoc false
 
-  @doc """
-  Hello world.
-
-  ## Examples
-
-      iex> Utils.hello()
-      :world
-
-  """
   def hello do
-    :world
+    :ok
   end
 end
