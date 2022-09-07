@@ -23,7 +23,7 @@ defmodule Nostr.MixProject do
 
   defp deps do
     [
-      {:secp256k1, in_umbrella: true},
+      {:secp256k1, git: "https://git.sr.ht/~sgiath/secp256k1"},
       {:jason, "~> 1.3"}
     ]
   end
