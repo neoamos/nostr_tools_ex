@@ -7,7 +7,11 @@ defmodule Nostr.MixProject do
       version: "0.1.0",
       elixir: "~> 1.14",
       start_permanent: Mix.env() == :prod,
-      deps: deps()
+      deps: deps(),
+      dialyzer: [
+        plt_core_path: "priv/plts",
+        plt_file: {:no_warn, "priv/plts/dialyzer.plt"}
+      ]
     ]
   end
 
@@ -20,7 +24,13 @@ defmodule Nostr.MixProject do
   defp deps do
     [
       {:secp256k1, git: "https://git.sr.ht/~sgiath/secp256k1"},
-      {:jason, "~> 1.3"}
+      {:jason, "~> 1.3"},
+
+      # Dev
+      {:ex_doc, "~> 0.28", only: [:dev, :test], runtime: false},
+      {:dialyxir, "~> 1.2", only: [:dev, :test], runtime: false},
+      {:credo, "~> 1.6", only: [:dev, :test], runtime: false},
+      {:mix_test_watch, "~> 1.1", only: :dev, runtime: false}
     ]
   end
 end

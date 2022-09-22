@@ -63,7 +63,7 @@ defmodule Nostr.Event do
 
   @spec create(content :: content(), seckey :: Secp256k1.seckey(), kind :: kind()) :: t()
   def create(content, seckey, kind) do
-    {:ok, pubkey} = Secp256k1.pubkey(seckey)
+    {:ok, pubkey} = Secp256k1.pubkey(seckey, :xonly)
 
     %__MODULE__{
       pubkey: pubkey,
