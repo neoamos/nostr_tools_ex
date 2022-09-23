@@ -1,6 +1,7 @@
 defmodule Nostr.Event do
   @moduledoc false
 
+  alias Nostr.Crypto
   alias Nostr.Event.Metadata
 
   @enforce_keys [:pubkey, :created_at, :kind, :content]
@@ -37,7 +38,7 @@ defmodule Nostr.Event do
         event.content
       ])
 
-    :crypto.hash(:sha256, encoded)
+    Crypto.sha256(encoded)
   end
 
   @spec load_id(event :: t()) :: t()
@@ -47,8 +48,7 @@ defmodule Nostr.Event do
 
   @spec gen_sig(event :: t(), seckey :: Secp256k1.seckey()) :: Secp256k1.signature()
   def gen_sig(%__MODULE__{} = event, seckey) do
-    {:ok, sig} = Secp256k1.sign(event.id, seckey)
-    sig
+    Crypto.sign(event.id, seckey)
   end
 
   @spec load_sig(event :: t(), seckey :: Secp256k1.seckey()) :: t()
@@ -58,15 +58,13 @@ defmodule Nostr.Event do
 
   @spec valid?(event :: t()) :: boolean()
   def valid?(%__MODULE__{} = event) do
-    Secp256k1.verify(event.sig, event.id, event.pubkey) == :valid and gen_id(event) == event.id
+    Crypto.verify(event.sig, event.id, event.pubkey) == :valid and gen_id(event) == event.id
   end
 
   @spec create(content :: content(), seckey :: Secp256k1.seckey(), kind :: kind()) :: t()
   def create(content, seckey, kind) do
-    {:ok, pubkey} = Secp256k1.pubkey(seckey, :xonly)
-
     %__MODULE__{
-      pubkey: pubkey,
+      pubkey: Crypto.pubkey(seckey),
       created_at: DateTime.utc_now(),
       kind: kind,
       content: content
