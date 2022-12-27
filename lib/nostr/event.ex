@@ -78,6 +78,11 @@ defmodule Nostr.Event do
   def serialize_kind(:text_note), do: 1
   def serialize_kind(:recommend_server), do: 2
 
+  @spec deserialize_kind(kind :: non_neg_integer()) :: kind()
+  def deserialize_kind(0), do: :set_metadata
+  def deserialize_kind(1), do: :text_note
+  def deserialize_kind(2), do: :recommend_server
+
   @spec set_metadata(metadata :: Metadata.t(), seckey :: Secp256k1.seckey()) :: t()
   def set_metadata(metadata, seckey), do: create(metadata, seckey, :set_metadata)
 
@@ -86,12 +91,54 @@ defmodule Nostr.Event do
 
   @spec recommend_server(url :: String.t(), seckey :: Secp256k1.seckey()) :: t()
   def recommend_server(url, seckey), do: create(url, seckey, :recommend_server)
+
+  def validate_json_event json do
+    %{
+      "type" => "object",
+      "required" => ["id", "pubkey", "sig", "created_at", "kind", "tags", "content"],
+      "properties" => %{
+        "id" => %{"type" => "string"},
+        "pubkey" => %{"type" => "string"},
+        "sig" => %{"type" => "string"},
+        "created_at" => %{"type" => "integer"},
+        "kind" => %{"type" => "integer"},
+        "tags" => %{"type" => "array"},
+        "content" => %{"type" => "string"}
+      }
+    }
+    |> ExJsonSchema.Schema.resolve()
+    |> ExJsonSchema.Validator.validate(json)
+  end
+
+  def decode(input) do
+    with {:ok, event} <- Jason.decode(input),
+          :ok <- validate_json_event(event),
+          {:ok, id} <- Base.decode16(event["id"], case: :mixed),
+          {:ok, pubkey} <- Base.decode16(event["pubkey"], case: :mixed),
+          {:ok, sig} <- Base.decode16(event["sig"], case: :mixed),
+          {:ok, created_at} <- DateTime.from_unix(event["created_at"])
+    do
+      {:ok,
+        %__MODULE__{
+          id: id,
+          pubkey: pubkey,
+          created_at: created_at,
+          kind: deserialize_kind(event["kind"]),
+          tags: event["tags"],
+          content: event["content"],
+          sig: sig
+        }
+      }
+    else
+      other -> other
+    end
+  end
 end
 
 defimpl Jason.Encoder, for: Nostr.Event do
   def encode(%Nostr.Event{} = event, opts) do
     %{
-      id: event.id,
+      id: Base.encode16(event.id, case: :lower),
       pubkey: Base.encode16(event.pubkey, case: :lower),
       created_at: DateTime.to_unix(event.created_at),
       kind: Nostr.Event.serialize_kind(event.kind),
