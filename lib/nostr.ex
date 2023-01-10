@@ -2,6 +2,9 @@ defmodule NostrTools do
   @moduledoc """
   NostrTools implements the core Nostr protocol primitives and other useful functions needed to develop a variety of different Nostr applications in Elixir.
 
+  NostrTools deals with events, filters and protocol messages and provides helper functions to manage these.
+  It does not try to solve other issues such as event storage or websocket connections
+
   There is a lot of NIPs functionality that still needs to be implemented
 
   # Examples
@@ -15,7 +18,7 @@ defmodule NostrTools do
   ## Create a new Event
   ```
   iex> seckey = NostrTools.Crypto.generate_seckey()
-  iex> event = NostrTools.Event.create("content", seckey, 1, [])
+  iex> {:ok, event} = NostrTools.Event.create("content", seckey, 1, [])
   ```
 
   ## Encode and decode an event to json
@@ -36,6 +39,8 @@ defmodule NostrTools do
   iex> NostrTools.Event.valid?(event)
   true
 
+  iex> seckey = NostrTools.Crypto.generate_seckey()
+  iex> {:ok, event} = NostrTools.Event.create("content", seckey, 1, [])
   iex> NostrTools.Event.valid?(%NostrTools.Event{event | content: "wrong content"})
   false
   ```
@@ -45,7 +50,7 @@ defmodule NostrTools do
   ```
   iex> filter = %NostrTools.Filter{since: 1673380970}
   iex> Jason.encode!(NostrTools.Message.req("sub id", filter))
-  "[\"REQ\",\"sub id\",{\"since\":1673380970}]"
+  ~s<[\"REQ\",\"sub id\",{\"since\":1673380970}]>
   ```
   """
   @moduledoc since: "1.0.0"
