@@ -1,4 +1,4 @@
-defmodule Nostr.Event.Metadata do
+defmodule NostrTools.Event.Metadata do
   @moduledoc false
 
   defstruct [:name, :about, :picture]
@@ -10,8 +10,8 @@ defmodule Nostr.Event.Metadata do
         }
 end
 
-defimpl Jason.Encoder, for: Nostr.Event.Metadata do
-  alias Nostr.Event.Metadata
+defimpl Jason.Encoder, for: NostrTools.Event.Metadata do
+  alias NostrTools.Event.Metadata
 
   def encode(%Metadata{} = metadata, opts) do
     %{}

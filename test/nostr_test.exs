@@ -3,10 +3,10 @@ defmodule NostrTest do
 
   doctest Nostr
 
-  alias Nostr.Crypto
-  alias Nostr.Event
-  alias Nostr.Filter
-  alias Nostr.Message
+  alias NostrTools.Crypto
+  alias NostrTools.Event
+  alias NostrTools.Filter
+  alias NostrTools.Message
 
   setup_all do
     {seckey, pubkey} = Secp256k1.keypair(:compressed)

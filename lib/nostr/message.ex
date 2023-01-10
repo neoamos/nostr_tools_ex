@@ -1,7 +1,7 @@
-defmodule Nostr.Message do
+defmodule NostrTools.Message do
   @moduledoc false
 
-  alias Nostr.Event
+  alias NostrTools.Event
 
   defstruct type: nil
 

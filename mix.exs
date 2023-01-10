@@ -1,4 +1,4 @@
-defmodule Nostr.MixProject do
+defmodule NostrTools.MixProject do
   use Mix.Project
 
   def project do

@@ -1,8 +1,8 @@
-defmodule Nostr.Filter do
+defmodule NostrTools.Filter do
   @moduledoc false
 
-  alias Nostr.Crypto
-  alias Nostr.Event
+  alias NostrTools.Crypto
+  alias NostrTools.Event
 
 
   @type t() :: %__MODULE__{
@@ -34,8 +34,8 @@ defmodule Nostr.Filter do
 
 end
 
-defimpl Jason.Encoder, for: Nostr.Filter do
-  def encode(%Nostr.Filter{} = filter, opts) do
+defimpl Jason.Encoder, for: NostrTools.Filter do
+  def encode(%NostrTools.Filter{} = filter, opts) do
     filter
     |> Map.delete(:__struct__)
     |> Map.to_list()

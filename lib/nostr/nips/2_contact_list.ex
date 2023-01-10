@@ -1,6 +1,6 @@
-defmodule Nostr.Nips.ContactList do
-  alias Nostr.Event
-  alias Nostr.Crypto
+defmodule NostrTools.Nips.ContactList do
+  alias NostrTools.Event
+  alias NostrTools.Crypto
 
   def get_contact_list %Event{} = event do
     tags = event.tags

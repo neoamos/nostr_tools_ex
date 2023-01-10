@@ -1,7 +1,7 @@
-defmodule Nostr.Event do
+defmodule NostrTools.Event do
   @moduledoc false
 
-  alias Nostr.Crypto
+  alias NostrTools.Crypto
 
   @enforce_keys [:pubkey, :created_at, :kind, :content]
   defstruct id: :not_loaded,
@@ -29,7 +29,7 @@ defmodule Nostr.Event do
           pubkey: Secp256k1.pubkey(),
           created_at: DateTime.t(),
           kind: non_neg_integer(),
-          tags: [Nostr.Tag.t()],
+          tags: [NostrTools.Tag.t()],
           content: content(),
           sig: Secp256k1.signature() | :not_loaded
         }
@@ -173,8 +173,8 @@ defmodule Nostr.Event do
 
 end
 
-defimpl Jason.Encoder, for: Nostr.Event do
-  def encode(%Nostr.Event{} = event, opts) do
+defimpl Jason.Encoder, for: NostrTools.Event do
+  def encode(%NostrTools.Event{} = event, opts) do
     %{
       id: Base.encode16(event.id, case: :lower),
       pubkey: Base.encode16(event.pubkey, case: :lower),

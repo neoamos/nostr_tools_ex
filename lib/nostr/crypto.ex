@@ -1,4 +1,4 @@
-defmodule Nostr.Crypto do
+defmodule NostrTools.Crypto do
   @moduledoc false
 
   def sha256(data) do
