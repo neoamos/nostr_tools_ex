@@ -1,3 +1,3 @@
-# Nostr
+# NostrTools
 
 **TODO: Add description**

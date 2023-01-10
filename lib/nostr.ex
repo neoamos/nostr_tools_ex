@@ -1,3 +1,3 @@
-defmodule Nostr do
+defmodule NostrTools do
   @moduledoc false
 end

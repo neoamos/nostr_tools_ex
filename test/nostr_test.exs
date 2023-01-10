@@ -1,7 +1,7 @@
 defmodule NostrTest do
   use ExUnit.Case
 
-  doctest Nostr
+  doctest NostrTools
 
   alias NostrTools.Crypto
   alias NostrTools.Event
