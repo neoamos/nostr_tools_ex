@@ -23,9 +23,8 @@ defmodule Nostr.MixProject do
 
   defp deps do
     [
-      {:secp256k1, git: "https://git.sr.ht/~sgiath/secp256k1"},
+      {:secp256k1, git: "https://git.sr.ht/~sgiath/secp256k1", ref: "04d2d87a8a5009f2a6bc22b90c4c05401c57b7c7"},
       {:jason, "~> 1.3"},
-      {:ex_json_schema, "~> 0.9.2"},
 
       # Dev
       {:ex_doc, "~> 0.28", only: [:dev, :test], runtime: false},

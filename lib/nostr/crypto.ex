@@ -6,11 +6,11 @@ defmodule Nostr.Crypto do
   end
 
   def sign(data, seckey) do
-    Secp256k1.sign(data, seckey)
+    Secp256k1.schnorr_sign(data, seckey)
   end
 
   def verify(sig, data, pubkey) do
-    Secp256k1.verify(sig, data, pubkey)
+    Secp256k1.schnorr_valid?(sig, data, pubkey)
   end
 
   def pubkey(seckey) do
@@ -35,4 +35,12 @@ defmodule Nostr.Crypto do
       padding: :pkcs_padding
     )
   end
+
+  def valid_hex?(hex, length) when is_binary(hex) do
+    case Base.decode16(hex, case: :lower) do
+      {:ok, bin} -> byte_size(bin) == length
+      _ -> false
+    end
+  end
+  def valid_hex?(hex, _) when not is_binary(hex), do: false
 end

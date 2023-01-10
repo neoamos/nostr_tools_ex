@@ -2,7 +2,6 @@ defmodule Nostr.Event do
   @moduledoc false
 
   alias Nostr.Crypto
-  alias Nostr.Event.Metadata
 
   @enforce_keys [:pubkey, :created_at, :kind, :content]
   defstruct id: :not_loaded,
@@ -13,14 +12,23 @@ defmodule Nostr.Event do
             content: nil,
             sig: :not_loaded
 
-  @type kind() :: :set_metadata | :text_note | :recommend_server
+  @type kind() :: 
+    :set_metadata | 
+    :text_note | 
+    :recommend_relay |
+    :contact_list |
+    :encrypted_dm |
+    :event_deletion |
+    :reaction |
+    :metadata |
+    :other
   @type id() :: <<_::32, _::_*8>>
-  @type content() :: String.t() | Metadata.t()
+  @type content() :: String.t()
   @type t() :: %__MODULE__{
           id: id() | :not_loaded,
           pubkey: Secp256k1.pubkey(),
           created_at: DateTime.t(),
-          kind: kind(),
+          kind: non_neg_integer(),
           tags: [Nostr.Tag.t()],
           content: content(),
           sig: Secp256k1.signature() | :not_loaded
@@ -31,9 +39,9 @@ defmodule Nostr.Event do
     {:ok, encoded} =
       Jason.encode([
         0,
-        Base.encode16(event.pubkey),
+        Base.encode16(event.pubkey, case: :lower),
         DateTime.to_unix(event.created_at),
-        serialize_kind(event.kind),
+        event.kind,
         event.tags,
         event.content
       ])
@@ -58,74 +66,54 @@ defmodule Nostr.Event do
 
   @spec valid?(event :: t()) :: boolean()
   def valid?(%__MODULE__{} = event) do
-    Crypto.verify(event.sig, event.id, event.pubkey) == :valid and gen_id(event) == event.id
+    valid_sig?(event) and valid_id?(event)
   end
 
-  @spec create(content :: content(), seckey :: Secp256k1.seckey(), kind :: kind()) :: t()
-  def create(content, seckey, kind) do
-    %__MODULE__{
-      pubkey: Crypto.pubkey(seckey),
-      created_at: DateTime.utc_now(),
-      kind: kind,
-      content: content
-    }
-    |> load_id()
-    |> load_sig(seckey)
+  @spec valid_sig?(event :: t()) :: boolean()
+  def valid_sig?(%__MODULE__{} = event) do
+    Crypto.verify(event.sig, event.id, event.pubkey)
   end
 
-  @spec serialize_kind(kind :: kind()) :: non_neg_integer()
-  def serialize_kind(:set_metadata), do: 0
-  def serialize_kind(:text_note), do: 1
-  def serialize_kind(:recommend_server), do: 2
+  @spec valid_id?(event :: t()) :: boolean()
+  def valid_id?(%__MODULE__{} = event) do
+    gen_id(event) == event.id
+  end
 
-  @spec deserialize_kind(kind :: non_neg_integer()) :: kind()
-  def deserialize_kind(0), do: :set_metadata
-  def deserialize_kind(1), do: :text_note
-  def deserialize_kind(2), do: :recommend_server
-
-  @spec set_metadata(metadata :: Metadata.t(), seckey :: Secp256k1.seckey()) :: t()
-  def set_metadata(metadata, seckey), do: create(metadata, seckey, :set_metadata)
-
-  @spec text_note(note :: String.t(), seckey :: Secp256k1.seckey()) :: t()
-  def text_note(note, seckey), do: create(note, seckey, :text_note)
-
-  @spec recommend_server(url :: String.t(), seckey :: Secp256k1.seckey()) :: t()
-  def recommend_server(url, seckey), do: create(url, seckey, :recommend_server)
-
-  def validate_json_event json do
-    %{
-      "type" => "object",
-      "required" => ["id", "pubkey", "sig", "created_at", "kind", "tags", "content"],
-      "properties" => %{
-        "id" => %{"type" => "string"},
-        "pubkey" => %{"type" => "string"},
-        "sig" => %{"type" => "string"},
-        "created_at" => %{"type" => "integer"},
-        "kind" => %{"type" => "integer"},
-        "tags" => %{"type" => "array"},
-        "content" => %{"type" => "string"}
+  @spec create(content :: content(), seckey :: Secp256k1.seckey(), 
+  kind :: non_neg_integer(), tags :: List.t()) :: t()
+  def create(content, seckey, kind, tags \\ []) do
+    if valid_tags?(tags) do
+      event = %__MODULE__{
+        pubkey: Crypto.pubkey(seckey),
+        created_at: (DateTime.utc_now() |> DateTime.truncate(:second)),
+        kind: kind,
+        content: content,
+        tags: tags
       }
-    }
-    |> ExJsonSchema.Schema.resolve()
-    |> ExJsonSchema.Validator.validate(json)
+      |> load_id()
+      |> load_sig(seckey)
+      {:ok, event}
+    else
+      {:error, "Invalid tags"}
+    end
   end
 
-  def decode(input) do
-    with {:ok, event} <- Jason.decode(input),
-          :ok <- validate_json_event(event),
-          {:ok, id} <- Base.decode16(event["id"], case: :mixed),
-          {:ok, pubkey} <- Base.decode16(event["pubkey"], case: :mixed),
-          {:ok, sig} <- Base.decode16(event["sig"], case: :mixed),
-          {:ok, created_at} <- DateTime.from_unix(event["created_at"])
+  @spec create(params :: String.t()) :: t() | term()
+  def create params do
+    with  :ok <- validate_params(params),
+          {:ok, id} <- Base.decode16(params["id"], case: :mixed),
+          {:ok, pubkey} <- Base.decode16(params["pubkey"], case: :mixed),
+          {:ok, sig} <- Base.decode16(params["sig"], case: :mixed),
+          {:ok, created_at} <- DateTime.from_unix(params["created_at"])
     do
       {:ok,
         %__MODULE__{
           id: id,
           pubkey: pubkey,
           created_at: created_at,
-          kind: deserialize_kind(event["kind"]),
-          tags: event["tags"],
-          content: event["content"],
+          kind: params["kind"],
+          tags: params["tags"],
+          content: params["content"],
           sig: sig
         }
       }
@@ -133,6 +121,56 @@ defmodule Nostr.Event do
       other -> other
     end
   end
+
+  @spec kind_name(kind :: non_neg_integer()) :: kind()
+  def kind_name(0), do: :set_metadata
+  def kind_name(1), do: :text_note
+  def kind_name(2), do: :recommend_relay
+  def kind_name(3), do: :contact_list
+  def kind_name(4), do: :encrypted_dm
+  def kind_name(5), do: :event_deletion
+  def kind_name(7), do: :reaction
+  def kind_name(_), do: :other
+
+  @spec kind_number(kind :: kind()) :: non_neg_integer()
+  def kind_number(:set_metadata), do: 0
+  def kind_number(:text_note), do: 1
+  def kind_number(:recommend_relay), do: 2
+  def kind_number(:contact_list), do: 3
+  def kind_number(:encrypted_dm), do: 4
+  def kind_number(:event_deletion), do: 5
+  def kind_number(:reaction), do: 6
+  def kind_number(:metadata), do: 7
+
+  @spec validate_params(params :: String.t()) :: :ok | {:error, String.t()}
+  def validate_params params do
+    cond do
+      !params["id"] or !Crypto.valid_hex?(params["id"], 32) -> 
+        {:error, "Invalid id"}
+      !params["pubkey"] or !Crypto.valid_hex?(params["pubkey"], 32) ->
+        {:error, "Invalid pubkey"}
+      !params["sig"] or !Crypto.valid_hex?(params["sig"], 64) ->
+        {:error, "Invalid sig"}
+      !params["created_at"] or !is_number(params["created_at"]) or params["created_at"] < 0 ->
+        {:error, "Invalid created_at"}
+      !params["kind"] or !is_number(params["kind"]) or params["kind"] < 0 ->
+        {:error, "Invalid kind"}
+      !params["tags"] or !valid_tags?(params["tags"]) ->
+        {:error, "Invalid tags"}
+      !params["content"] or !is_binary(params["content"]) -> 
+        {:error, "Invalid content"}
+      true -> :ok
+    end
+  end
+
+  def valid_tags? tags do
+    is_list(tags) and Enum.all?(tags, fn t -> 
+      is_list(t) and Enum.all?(t, fn v ->
+        is_binary(v)
+      end)
+    end)
+  end
+
 end
 
 defimpl Jason.Encoder, for: Nostr.Event do
@@ -141,7 +179,7 @@ defimpl Jason.Encoder, for: Nostr.Event do
       id: Base.encode16(event.id, case: :lower),
       pubkey: Base.encode16(event.pubkey, case: :lower),
       created_at: DateTime.to_unix(event.created_at),
-      kind: Nostr.Event.serialize_kind(event.kind),
+      kind: event.kind,
       tags: event.tags,
       content: event.content,
       sig: Base.encode16(event.sig, case: :lower)
