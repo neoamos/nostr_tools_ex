@@ -9,6 +9,19 @@ There is a lot of NIPs functionality that still needs to be implemented.
 
 Credit to [sgiath](https://git.sr.ht/~sgiath/) for the [crypto library](https://git.sr.ht/~sgiath/secp256k1) and the initial implementation of the protocol.
 
+# Installation
+The package can be installed by adding `nostr_tools` to your list of dependencies in mix.exs:
+
+```
+def deps do
+  [{:nostr_tools, git: "https://github.com/neoamos/nostr_tools_ex"}]
+end
+```
+
+The package is not on hex.pm since the crypto library used is not on hex.pm.
+
+During compilation, the crypto library needs to compile some C code.  Please refer to the [crypto library documentation](https://git.sr.ht/~sgiath/secp256k1) if you have issues.
+
 # Examples
 
 ## Generate keys
