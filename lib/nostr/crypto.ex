@@ -17,6 +17,11 @@ defmodule Nostr.Crypto do
     Secp256k1.pubkey(seckey, :xonly)
   end
 
+  def seckey() do
+    {seckey, _pubkey} = Secp256k1.keypair(:xonly)
+    seckey
+  end
+
   def encrypt(message, shared_secret) do
     iv = :crypto.strong_rand_bytes(16)
     {encrypt(message, shared_secret, iv), iv}
