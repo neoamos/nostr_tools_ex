@@ -1,5 +1,7 @@
 defmodule NostrTools.Message do
-  @moduledoc false
+  @moduledoc """
+  Defines functions for enerating protocol messages.
+  """
 
   alias NostrTools.Event
 

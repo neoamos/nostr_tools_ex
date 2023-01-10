@@ -1,5 +1,8 @@
 defmodule NostrTools.Event do
-  @moduledoc false
+  @moduledoc """
+  This module defines an Event struct an functions used to create and manipulate them. Can be serialized to json with Jason
+  """
+  @moduledoc since: "1.0.0"
 
   alias NostrTools.Crypto
 
@@ -12,9 +15,9 @@ defmodule NostrTools.Event do
             content: nil,
             sig: :not_loaded
 
-  @type kind() :: 
-    :set_metadata | 
-    :text_note | 
+  @type kind() ::
+    :set_metadata |
+    :text_note |
     :recommend_relay |
     :contact_list |
     :encrypted_dm |
@@ -35,6 +38,8 @@ defmodule NostrTools.Event do
           sig: Secp256k1.schnorr_sig() | :not_loaded
         }
 
+  @doc "Returns the Nostr ID for a given event"
+  @doc since: "1.0.0"
   @spec gen_id(event :: t()) :: id()
   def gen_id(%__MODULE__{} = event) do
     {:ok, encoded} =
@@ -50,37 +55,65 @@ defmodule NostrTools.Event do
     Crypto.sha256(encoded)
   end
 
+  @doc """
+  Generates the Nostr ID for the given event and loads it into the struct
+  """
+  @doc since: "1.0.0"
   @spec load_id(event :: t()) :: t()
   def load_id(%__MODULE__{} = event) do
     %__MODULE__{event | id: gen_id(event)}
   end
 
+  @doc """
+  Generates a signature of the Nostr ID of the given event
+  """
+  @doc since: "1.0.0"
   @spec gen_sig(event :: t(), seckey :: Secp256k1.seckey()) :: Secp256k1.schnorr_sig()
   def gen_sig(%__MODULE__{} = event, seckey) do
     Crypto.sign(event.id, seckey)
   end
 
+  @doc """
+  Generates a signature of the Nostr ID of the given event and loads it into the struct
+  """
+  @doc since: "1.0.0"
   @spec load_sig(event :: t(), seckey :: Secp256k1.seckey()) :: t()
   def load_sig(%__MODULE__{} = event, seckey) do
     %__MODULE__{event | sig: gen_sig(event, seckey)}
   end
 
+  @doc """
+  Checks if the ID in the event corresponds to the event data and checks that the signature is correct
+  """
+  @doc since: "1.0.0"
   @spec valid?(event :: t()) :: boolean()
   def valid?(%__MODULE__{} = event) do
     valid_sig?(event) and valid_id?(event)
   end
 
+  @doc """
+  Checks if the signature of the event id is valid
+  """
+  @doc since: "1.0.0"
   @spec valid_sig?(event :: t()) :: boolean()
   def valid_sig?(%__MODULE__{} = event) do
     Crypto.verify(event.sig, event.id, event.pubkey)
   end
 
+  @doc """
+  Checks if the Nostr ID correspons to the event data
+  """
+  @doc since: "1.0.0"
   @spec valid_id?(event :: t()) :: boolean()
   def valid_id?(%__MODULE__{} = event) do
     gen_id(event) == event.id
   end
 
-  @spec create(content :: content(), seckey :: Secp256k1.seckey(), 
+  @doc """
+  Creates an event from a seckey, content, tags and kind
+  """
+  @doc since: "1.0.0"
+  @spec create(content :: content(), seckey :: Secp256k1.seckey(),
   kind :: non_neg_integer(), tags :: tags()) :: {:ok, t()} | {:error, term()}
   def create(content, seckey, kind, tags \\ []) do
     if valid_tags?(tags) do
@@ -99,6 +132,14 @@ defmodule NostrTools.Event do
     end
   end
 
+  @doc """
+  Creates an event from a map containing the event parameters.
+
+  The values in the map are validated.
+  Keys, IDs and signatures are lower-case hex encoded strings.
+  Most likely this will come from decoding a json event.
+  """
+  @doc since: "1.0.0"
   @spec create(params :: map()) :: {:ok, t()} | term()
   def create params do
     with  :ok <- validate_params(params),
@@ -123,6 +164,8 @@ defmodule NostrTools.Event do
     end
   end
 
+  @doc "Returns an atom representing the name of an event kind"
+  @doc since: "1.0.0"
   @spec kind_name(kind :: non_neg_integer()) :: kind()
   def kind_name(0), do: :set_metadata
   def kind_name(1), do: :text_note
@@ -133,6 +176,8 @@ defmodule NostrTools.Event do
   def kind_name(7), do: :reaction
   def kind_name(_), do: :other
 
+  @doc "Returns the kind number from an atom representing its name"
+  @doc since: "1.0.0"
   @spec kind_number(kind :: kind()) :: non_neg_integer()
   def kind_number(:set_metadata), do: 0
   def kind_number(:text_note), do: 1
@@ -143,10 +188,14 @@ defmodule NostrTools.Event do
   def kind_number(:reaction), do: 6
   def kind_number(:metadata), do: 7
 
+  @doc """
+  Validates a map of parameters for a new event
+  """
+  @doc since: "1.0.0"
   @spec validate_params(params :: map()) :: :ok | {:error, String.t()}
   def validate_params params do
     cond do
-      !params["id"] or !Crypto.valid_hex?(params["id"], 32) -> 
+      !params["id"] or !Crypto.valid_hex?(params["id"], 32) ->
         {:error, "Invalid id"}
       !params["pubkey"] or !Crypto.valid_hex?(params["pubkey"], 32) ->
         {:error, "Invalid pubkey"}
@@ -158,18 +207,20 @@ defmodule NostrTools.Event do
         {:error, "Invalid kind"}
       !params["tags"] or !valid_tags?(params["tags"]) ->
         {:error, "Invalid tags"}
-      !params["content"] or !is_binary(params["content"]) -> 
+      !params["content"] or !is_binary(params["content"]) ->
         {:error, "Invalid content"}
       true -> :ok
     end
   end
 
+  @doc "Validates that the tags are a list of a lists of strings"
+  @doc since: "1.0.0"
   def valid_tags? tags do
-    is_list(tags) and Enum.all?(tags, fn t -> 
+    is_list(tags) and (length(tags) == 0 or Enum.all?(tags, fn t ->
       is_list(t) and Enum.all?(t, fn v ->
         is_binary(v)
       end)
-    end)
+    end))
   end
 
 end

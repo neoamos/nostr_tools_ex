@@ -1,5 +1,7 @@
 defmodule NostrTools.Filter do
-  @moduledoc false
+  @moduledoc """
+  Defines a Nostr Filter struct and related functions. Can be serialized to json with Jason
+  """
 
   alias NostrTools.Event
 
@@ -26,6 +28,11 @@ defmodule NostrTools.Filter do
     :limit
   ]
 
+  @doc """
+  Checks if a filter matches an event
+
+  Not Implemented
+  """
   @spec matches?(filter :: t(), event :: Event.t()) :: boolean()
   def matches? _filter, _event do
     false
