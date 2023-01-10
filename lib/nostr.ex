@@ -3,7 +3,7 @@ defmodule NostrTools do
   NostrTools implements the core Nostr protocol primitives and other useful functions needed to develop a variety of different Nostr applications in Elixir.
 
   NostrTools deals with events, filters and protocol messages and provides helper functions to manage these.
-  It does not try to solve other issues such as event storage or websocket connections
+  It does not try to solve application specific issues such as event storage or websocket connections.
 
   There is a lot of NIPs functionality that still needs to be implemented
 
