@@ -17,7 +17,7 @@ defmodule NostrTools.Crypto do
     Secp256k1.pubkey(seckey, :xonly)
   end
 
-  def seckey() do
+  def generate_seckey() do
     {seckey, _pubkey} = Secp256k1.keypair(:xonly)
     seckey
   end

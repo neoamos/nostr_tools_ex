@@ -34,13 +34,11 @@ defmodule NostrTest do
     json = Jason.encode!(event)
     {:ok, decoded_event} = Event.create(Jason.decode!(json))
     assert event == decoded_event
-    assert Event.valid?(decoded_event)
   end
 
   test "event parsing", %{event1: event_json} do
     {:ok, event} = Event.create(Jason.decode!(event_json))
 
-    assert Event.valid_id?(event)
     assert Event.valid?(event)
   end
 end

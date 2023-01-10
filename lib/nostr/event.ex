@@ -24,14 +24,15 @@ defmodule NostrTools.Event do
     :other
   @type id() :: <<_::32, _::_*8>>
   @type content() :: String.t()
+  @type tags() :: [[String.t()]]
   @type t() :: %__MODULE__{
           id: id() | :not_loaded,
-          pubkey: Secp256k1.pubkey(),
+          pubkey: Secp256k1.xonly_pubkey(),
           created_at: DateTime.t(),
           kind: non_neg_integer(),
-          tags: [NostrTools.Tag.t()],
+          tags: tags(),
           content: content(),
-          sig: Secp256k1.signature() | :not_loaded
+          sig: Secp256k1.schnorr_sig() | :not_loaded
         }
 
   @spec gen_id(event :: t()) :: id()
@@ -54,7 +55,7 @@ defmodule NostrTools.Event do
     %__MODULE__{event | id: gen_id(event)}
   end
 
-  @spec gen_sig(event :: t(), seckey :: Secp256k1.seckey()) :: Secp256k1.signature()
+  @spec gen_sig(event :: t(), seckey :: Secp256k1.seckey()) :: Secp256k1.schnorr_sig()
   def gen_sig(%__MODULE__{} = event, seckey) do
     Crypto.sign(event.id, seckey)
   end
@@ -80,7 +81,7 @@ defmodule NostrTools.Event do
   end
 
   @spec create(content :: content(), seckey :: Secp256k1.seckey(), 
-  kind :: non_neg_integer(), tags :: List.t()) :: t()
+  kind :: non_neg_integer(), tags :: tags()) :: {:ok, t()} | {:error, term()}
   def create(content, seckey, kind, tags \\ []) do
     if valid_tags?(tags) do
       event = %__MODULE__{
@@ -98,7 +99,7 @@ defmodule NostrTools.Event do
     end
   end
 
-  @spec create(params :: String.t()) :: t() | term()
+  @spec create(params :: map()) :: {:ok, t()} | term()
   def create params do
     with  :ok <- validate_params(params),
           {:ok, id} <- Base.decode16(params["id"], case: :mixed),
@@ -142,7 +143,7 @@ defmodule NostrTools.Event do
   def kind_number(:reaction), do: 6
   def kind_number(:metadata), do: 7
 
-  @spec validate_params(params :: String.t()) :: :ok | {:error, String.t()}
+  @spec validate_params(params :: map()) :: :ok | {:error, String.t()}
   def validate_params params do
     cond do
       !params["id"] or !Crypto.valid_hex?(params["id"], 32) -> 

@@ -1,7 +1,6 @@
 defmodule NostrTools.Filter do
   @moduledoc false
 
-  alias NostrTools.Crypto
   alias NostrTools.Event
 
 
@@ -17,18 +16,18 @@ defmodule NostrTools.Filter do
         }
 
   defstruct [
-    :ids, 
-    :authors, 
-    :kinds, 
-    :e, 
-    :p, 
-    :since, 
-    :until, 
+    :ids,
+    :authors,
+    :kinds,
+    :e,
+    :p,
+    :since,
+    :until,
     :limit
   ]
 
   @spec matches?(filter :: t(), event :: Event.t()) :: boolean()
-  def matches? filter, event do
+  def matches? _filter, _event do
     false
   end
 
