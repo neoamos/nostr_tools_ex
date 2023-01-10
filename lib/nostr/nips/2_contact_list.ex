@@ -2,7 +2,7 @@ defmodule NostrTools.Nips.ContactList do
   @moduledoc """
   A collection of functions useful for parsing contact list events
   """
-  @moduledoc since: "1.0.0"
+  @moduledoc since: "0.1.0"
   alias NostrTools.Event
   alias NostrTools.Crypto
 

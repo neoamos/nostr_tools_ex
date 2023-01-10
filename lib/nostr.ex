@@ -53,5 +53,5 @@ defmodule NostrTools do
   ~s<[\"REQ\",\"sub id\",{\"since\":1673380970}]>
   ```
   """
-  @moduledoc since: "1.0.0"
+  @moduledoc since: "0.1.0"
 end

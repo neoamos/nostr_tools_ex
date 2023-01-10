@@ -1,6 +1,8 @@
 defmodule NostrTools.MixProject do
   use Mix.Project
 
+  @source_url "https://github.com/neoamos/nostr_tools_ex"
+
   def project do
     [
       app: :nostr_tools,
@@ -8,6 +10,11 @@ defmodule NostrTools.MixProject do
       elixir: "~> 1.13",
       start_permanent: Mix.env() == :prod,
       deps: deps(),
+      description: description(),
+      package: package(),
+      docs: docs(),
+      source_url: @source_url,
+      name: "NostrTools",
       dialyzer: [
         plt_core_path: "priv/plts",
         plt_file: {:no_warn, "priv/plts/dialyzer.plt"}
@@ -18,6 +25,28 @@ defmodule NostrTools.MixProject do
   def application do
     [
       extra_applications: [:logger, :crypto]
+    ]
+  end
+
+  defp description() do
+    """
+    Core Nostr primitives and related functions.
+    """
+  end
+
+  defp package() do
+    [
+      maintainers: ["Amos Newswanger"],
+      licenses: ["WTFPL"],
+      links: %{"GitHub" => @source_url}
+    ]
+  end
+
+  defp docs() do
+    [
+      main: "NostrTools", # The main page in the docs
+      source_url: @source_url,
+      extras: ["README.md"]
     ]
   end
 
