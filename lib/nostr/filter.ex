@@ -44,6 +44,10 @@ defimpl Jason.Encoder, for: NostrTools.Filter do
   def encode(%NostrTools.Filter{} = filter, opts) do
     filter
     |> Map.delete(:__struct__)
+    |> Map.put(:"#p", filter.p)
+    |> Map.put(:"#e", filter.e)
+    |> Map.delete(:p)
+    |> Map.delete(:e)
     |> Map.to_list()
     |> Enum.filter(fn {_k, v} -> v != nil end)
     |> Map.new()

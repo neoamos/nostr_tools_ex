@@ -45,7 +45,7 @@ defmodule NostrTools.MixProject do
   defp docs() do
     [
       main: "NostrTools", # The main page in the docs
-      source_url: @source_url,
+      source_url_pattern: "#{@source_url}/blob/master/%{path}#L%{line}",
       extras: ["README.md"]
     ]
   end
